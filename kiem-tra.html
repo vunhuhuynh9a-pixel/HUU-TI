@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm tra ngân hàng câu hỏi</title>
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="vendor/phong-chu.css">
+<style>
+  :root { --nen: #f4f7fb; --chu: #1f2a44; --mo: #5f6b85; --do: #d64545; --vang: #c98a00; --xanh: #2f9e5b; --vien: #d9e1ee; }
+  body { margin: 0; background: var(--nen); color: var(--chu); font-family: Nunito, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-family: "Baloo 2", sans-serif; margin: 0 0 4px; }
+  .tom { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+  .o { background: #fff; border: 1px solid var(--vien); border-radius: 12px; padding: 10px 14px; min-width: 120px; }
+  .o b { display: block; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+  .ok b { color: var(--xanh); } .loi b { color: var(--do); } .canh b { color: var(--vang); }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .92rem; }
+  td, th { border: 1px solid var(--vien); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #eef3fa; }
+  .bang { overflow-x: auto; margin: 10px 0 24px; }
+  .the-loi { color: var(--do); } .the-canh { color: var(--vang); }
+  .muc { display: inline-block; padding: 0 6px; border-radius: 6px; background: #eef3fa; font-size: .8rem; }
+  details { background: #fff; border: 1px solid var(--vien); border-radius: 10px; padding: 8px 12px; margin: 6px 0; }
+  summary { cursor: pointer; font-weight: 700; }
+  .de { margin: 6px 0; }
+  button { font: inherit; padding: 8px 14px; border-radius: 10px; border: 0; background: #3d6fd9; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Kiểm tra ngân hàng câu hỏi</h1>
+  <p>Trang này tính lại đáp án mọi câu bằng phân số chính xác, đồng thời chạy thử từng mẫu câu sinh ngẫu nhiên nhiều lần. Sau khi sửa <code>du-lieu/cau-hoi.js</code>, hãy tải lại trang này.</p>
+  <button id="chay">Chạy kiểm tra lại</button>
+  <div id="kq"></div>
+</main>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="js/phan-so.js"></script>
+<script src="js/hien-thi.js"></script>
+<script src="du-lieu/cot-truyen.js"></script>
+<script src="du-lieu/cau-hoi.js"></script>
+<script src="du-lieu/sinh-cau-hoi.js"></script>
+<script src="js/kiem-tra.js"></script>
+<script>
+(function () {
+  const H = HienThi, CT = COT_TRUYEN;
+  function chay() {
+    const t0 = performance.now();
+    const r = KiemTra.kiemTraTatCa(200);
+    const loi = r.kq.filter(x => x.loi.length), canh = r.kq.filter(x => !x.loi.length && x.canh.length);
+    const tuDong = r.kq.filter(x => x.tuDong).length;
+    const sinhLoi = r.sinh.filter(s => s.soLoi);
+    window.KET_QUA_KIEM_TRA = { tong: r.kq.length, loi: loi.length, canh: canh.length, tuDong, sinhLoi: sinhLoi.length,
+      chiTiet: loi.map(x => x.q.id + ': ' + x.loi.join(' | ')).concat(sinhLoi.map(s => s.ten + ': ' + s.soLoi + ' lỗi, ví dụ ' + JSON.stringify(s.mau))) };
+    let h = '<div class="tom">' +
+      '<div class="o"><b>' + r.kq.length + '</b>câu trong ngân hàng</div>' +
+      '<div class="o ' + (loi.length ? 'loi' : 'ok') + '"><b>' + loi.length + '</b>câu có lỗi</div>' +
+      '<div class="o ok"><b>' + tuDong + '</b>câu máy tự tính lại</div>' +
+      '<div class="o canh"><b>' + canh.length + '</b>câu cần soát tay</div>' +
+      '<div class="o ' + (sinhLoi.length ? 'loi' : 'ok') + '"><b>' + r.sinh.reduce((a, s) => a + s.tong, 0) + '</b>câu sinh ngẫu nhiên đã thử, ' + r.sinh.reduce((a, s) => a + s.soLoi, 0) + ' lỗi</div>' +
+      '</div>';
+    if (loi.length) {
+      h += '<h2>Câu có lỗi</h2>';
+      loi.forEach(x => { h += '<details open><summary class="the-loi">' + H.esc(x.q.id) + ' — ' + x.loi.length + ' lỗi</summary><div class="de">' + H.text(x.q.de) + '</div><ul>' + x.loi.map(l => '<li class="the-loi">' + H.esc(l) + '</li>').join('') + '</ul></details>'; });
+    }
+    if (sinhLoi.length) {
+      h += '<h2>Mẫu sinh ngẫu nhiên có lỗi</h2>';
+      sinhLoi.forEach(s => { h += '<details open><summary class="the-loi">' + s.ten + ': ' + s.soLoi + '/' + s.tong + '</summary><pre>' + H.esc(JSON.stringify(s.mau, null, 1)) + '</pre></details>'; });
+    }
+    // Thống kê phân bố
+    const vung = [1, 2, 3, 4, 5], loai = Object.keys(CT.LOAI);
+    h += '<h2>Phân bố câu hỏi</h2><div class="bang"><table><tr><th>Vùng</th><th>Tổng</th><th>Dễ</th><th>Thường</th><th>Khó</th>' + loai.map(l => '<th>' + CT.LOAI[l] + '</th>').join('') + '<th>Số dạng</th></tr>';
+    vung.forEach(v => {
+      const kinds = loai.filter(l => r.thongKe.theoLoai[v + '|' + l]).length;
+      h += '<tr><td>' + CT.VUNG[v - 1].ten + '</td><td>' + (r.thongKe.theoVung[v] || 0) + '</td>' +
+        [1, 2, 3].map(m => '<td>' + (r.thongKe.theoMuc[v + '|' + m] || 0) + '</td>').join('') +
+        loai.map(l => '<td>' + (r.thongKe.theoLoai[v + '|' + l] || '') + '</td>').join('') +
+        '<td class="' + (kinds < 4 ? 'the-loi' : '') + '">' + kinds + '</td></tr>';
+    });
+    h += '</table></div>';
+    h += '<h2>Mẫu sinh ngẫu nhiên</h2><div class="bang"><table><tr><th>Mẫu</th><th>Số lần thử</th><th>Lỗi</th></tr>' +
+      r.sinh.map(s => '<tr><td>' + s.ten + '</td><td>' + s.tong + '</td><td class="' + (s.soLoi ? 'the-loi' : '') + '">' + s.soLoi + '</td></tr>').join('') + '</table></div>';
+    if (canh.length) {
+      h += '<h2>Câu khái niệm cần soát tay (' + canh.length + ')</h2><p>Đây là các câu mà đáp án là chữ (không phải con số), máy không tự tính được.</p>';
+      canh.forEach(x => {
+        const q = x.q; let da = '';
+        if (q.loai === 'trac-nghiem') da = 'Đáp án ' + q.dapAn + ': ' + H.text(q.phuongAn['ABCD'.indexOf(q.dapAn)]);
+        if (q.loai === 'dung-sai') da = q.y.map(y => H.text(y.nd) + ' → <b>' + (y.dung ? 'Đ' : 'S') + '</b>').join('<br>');
+        h += '<details><summary>' + q.id + ' <span class="muc">' + CT.MUC[q.muc] + '</span></summary><div class="de">' + H.text(q.de) + '</div><div>' + da + '</div></details>';
+      });
+    }
+    h += '<p style="color:var(--mo)">Thời gian chạy: ' + Math.round(performance.now() - t0) + ' ms.</p>';
+    document.getElementById('kq').innerHTML = h;
+  }
+  document.getElementById('chay').onclick = chay;
+  chay();
+})();
+</script>
+</body>
+</html>

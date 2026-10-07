@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bảng điều khiển giáo viên · Vương Quốc Hữu Tỉ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="vendor/phong-chu.css">
+<style>
+  /* Trang tiện ích: một cột, bảng rõ ràng, màu trùng với game nhưng tiết chế */
+  :root { --nen: #f3f6fb; --giay: #fff; --muc: #2b2350; --mo: #6b6790; --vien: #d8deeb; --chinh: #ffc233; --tim: #8a5cf6; --do: #ef476f; --xanh: #22b573; --cam: #ff8c2a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--nen); color: var(--muc); font-family: Nunito, "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1, h2 { font-family: "Baloo 2", system-ui, sans-serif; margin: 0; line-height: 1.15; }
+  h1 { font-size: 1.8rem; } h2 { font-size: 1.3rem; margin: 26px 0 10px; }
+  .phu { color: var(--mo); }
+  .the { background: var(--giay); border: 1px solid var(--vien); border-radius: 14px; padding: 16px; }
+  textarea { width: 100%; min-height: 140px; font: .85rem/1.4 ui-monospace, Consolas, monospace; padding: 10px; border: 2px solid var(--vien); border-radius: 10px; resize: vertical; }
+  .hang { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  button, select { font: inherit; font-weight: 700; padding: 8px 14px; border-radius: 10px; border: 2px solid var(--muc); background: #fff; cursor: pointer; }
+  button.chinh { background: var(--chinh); }
+  .tom { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
+  .tom div { background: var(--giay); border: 1px solid var(--vien); border-radius: 12px; padding: 10px 14px; }
+  .tom b { display: block; font-family: "Baloo 2", sans-serif; font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+  .cuon { overflow-x: auto; background: var(--giay); border: 1px solid var(--vien); border-radius: 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--vien); white-space: nowrap; }
+  th { background: #eef2fa; position: sticky; top: 0; cursor: pointer; }
+  td.so, th.so { text-align: right; }
+  tr.top1 td:first-child::before { content: "🥇 "; } tr.top2 td:first-child::before { content: "🥈 "; } tr.top3 td:first-child::before { content: "🥉 "; }
+  .thanh { display: inline-block; width: 120px; height: 10px; background: #eef2fa; border-radius: 6px; overflow: hidden; vertical-align: middle; }
+  .thanh i { display: block; height: 100%; }
+  .loi { color: var(--do); }
+  .nhan { display: inline-block; font-size: .75rem; font-weight: 800; padding: 0 8px; border-radius: 999px; background: #eef2fa; }
+  details { margin-top: 4px; } summary { cursor: pointer; color: var(--mo); font-size: .85rem; }
+  @media (max-width: 600px) { h1 { font-size: 1.45rem; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="phu">Vương Quốc Hữu Tỉ · Chương I Số hữu tỉ · Toán 7</p>
+  <h1>Bảng điều khiển giáo viên</h1>
+  <p class="phu" style="max-width:70ch;margin-top:6px">Có hai cách nhận kết quả: <b>tự động</b> qua Google Sheets (học sinh chơi ở nhà, kết quả tự gửi về), hoặc <b>dán mã kết quả</b> học sinh gửi qua tin nhắn. Hai nguồn được gộp lại, mỗi học sinh giữ kết quả mới nhất.</p>
+
+  <div class="the" style="margin-top:14px">
+    <b>1. Kết quả tự động (Google Sheets)</b>
+    <p class="phu" style="margin:4px 0 8px">Cài đặt một lần theo README mục 5. Mật khẩu là <code>MAT_KHAU_GIAO_VIEN</code> thầy cô đặt trong Apps Script.</p>
+    <div class="hang" style="margin-top:0">
+      <input id="url-kq" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1 1 320px;min-width:0;font:inherit;padding:8px 10px;border:2px solid var(--vien);border-radius:10px">
+      <input id="mat-khau" type="password" placeholder="Mật khẩu giáo viên" autocomplete="current-password" style="flex:0 1 200px;min-width:0;font:inherit;padding:8px 10px;border:2px solid var(--vien);border-radius:10px">
+      <button class="chinh" id="tai-on">Tải kết quả</button>
+      <label><input type="checkbox" id="tu-dong"> Tự cập nhật mỗi phút</label>
+    </div>
+    <p id="bao-on" class="phu" style="margin-top:8px"></p>
+  </div>
+
+  <div class="the" style="margin-top:14px">
+    <label for="o-ma"><b>2. Dán mã kết quả</b> <span class="phu">(học sinh chép trong mục Hồ sơ của game, bắt đầu bằng <code>HT1-</code>)</span></label>
+    <textarea id="o-ma" placeholder="Ví dụ:&#10;Em là Minh Anh 7A1: HT1-MXxNaW5o....abc123&#10;HT1-....."></textarea>
+    <div class="hang">
+      <button class="chinh" id="xem">Xem bảng xếp hạng</button>
+      <button id="mau">Thử với dữ liệu mẫu</button>
+      <button id="xoa">Xoá ô</button>
+      <span style="flex:1"></span>
+      <label for="loc">Lớp:</label><select id="loc"><option value="">Tất cả</option></select>
+      <button id="chep">Chép bảng (dán vào Excel)</button>
+      <button id="csv">Tải bảng (CSV)</button>
+    </div>
+    <p id="bao" class="phu" style="margin-top:8px"></p>
+  </div>
+
+  <div id="ket-qua"></div>
+</main>
+<script src="du-lieu/cot-truyen.js"></script>
+<script src="du-lieu/cau-hinh.js"></script>
+<script src="js/ma-ket-qua.js"></script>
+<script src="js/giao-vien.js"></script>
+</body>
+</html>
