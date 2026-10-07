@@ -142,12 +142,20 @@
     }
   }
 
+  /* thông tin giáo viên, trường (đặt trong du-lieu/cau-hinh.js) */
+  function theGV(chuKy) {
+    const c = window.CAU_HINH || {};
+    if (!c.giaoVien && !c.truong) return '';
+    return '<p class="' + (chuKy ? 'bk-gv' : 'logo-gv') + '">' + (c.giaoVien ? (chuKy ? 'Giáo viên xác nhận: ' : 'Giáo viên: ') + '<b>' + esc(c.giaoVien) + '</b>' : '') +
+      (c.giaoVien && c.truong ? '<br>' : '') + (c.truong ? esc(c.truong) : '') + '</p>';
+  }
+
   /* ===================== MÀN MỞ ĐẦU ===================== */
   function manMoDau() {
     const daLuu = tai();
     const m = datMan('mo-dau',
       '<div class="mo-dau">' +
-      '<div class="logo"><span class="logo-q">ℚ</span><h1>Vương Quốc<br><em>Hữu Tỉ</em></h1><p class="logo-phu">Hành trình của Hiệp sĩ Toán học · Toán 7</p></div>' +
+      '<div class="logo"><span class="logo-q">ℚ</span><h1>Vương Quốc<br><em>Hữu Tỉ</em></h1><p class="logo-phu">Hành trình của Hiệp sĩ Toán học · Toán 7</p>' + theGV() + '</div>' +
       '<div class="mo-dau-canh" aria-hidden="true"><span>🏡</span><span>🏰</span><span>🌲</span><span>⛰️</span><span>🏯</span></div>' +
       '<div class="mo-dau-nut">' +
       (daLuu ? '<button class="nut nut-chinh nut-to" id="choi-tiep">▶ Chơi tiếp: ' + esc(daLuu.ten) + '</button>' : '') +
@@ -674,25 +682,33 @@
   const CH = window.CAU_HINH || {};
   const coMayChu = () => /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(CH.urlKetQua || '') || /^\/[\w-]+$/.test(CH.urlKetQua || '');
   const taoId = () => Array.from({ length: 16 }, () => 'abcdefghijkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 32)]).join('');
-  let henGui = null, dangGui = false;
+  let henGui = null, dangGui = false, phienGui = 0;
   /** đánh dấu cần gửi, gửi sau 1,5 giây (gộp nhiều lần thành một) */
   function guiKetQua(ngay) {
     if (!S || !coMayChu()) return;
-    S.choGui = true; luu();
+    S.choGui = true; phienGui++; luu();
     clearTimeout(henGui); henGui = setTimeout(guiNgay, ngay ? 0 : 1500);
   }
   async function guiNgay() {
-    if (!S || !S.choGui || !coMayChu() || dangGui) return false;
-    if (!S.id) S.id = taoId();
-    const goi = { id: S.id, ten: S.ten, lop: S.lop, cap: cap(S.xp), xp: S.xp, sao: tongSao(), vung: soVungXong(), huyHieu: Object.keys(S.hh).length, dung: S.dem.dung, sai: S.dem.sai, ma: taoMa() };
+    if (!S || !S.choGui || !coMayChu()) return false;
+    // đang gửi dở: hẹn gửi lại sau, KHÔNG bỏ qua kết quả mới
+    if (dangGui) { clearTimeout(henGui); henGui = setTimeout(guiNgay, 1500); return false; }
+    const s = S, phien = phienGui;
+    if (!s.id) s.id = taoId();
+    const goi = { id: s.id, ten: s.ten, lop: s.lop, cap: cap(s.xp), xp: s.xp, sao: tongSao(), vung: soVungXong(), huyHieu: Object.keys(s.hh).length, dung: s.dem.dung, sai: s.dem.sai, ma: taoMa() };
     dangGui = true;
     try {
       // no-cors: Google Apps Script nhận được dữ liệu nhưng trình duyệt không đọc được phản hồi
       await fetch(CH.urlKetQua, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(goi) });
-      S.choGui = false; S.daGuiLuc = Date.now(); luu();
+      s.daGuiLuc = Date.now();
+      if (phien === phienGui) s.choGui = false; // có kết quả mới trong lúc gửi thì giữ cờ để gửi tiếp
+      if (s === S) luu();
       return true;
     } catch (e) { return false; } // mất mạng: giữ cờ choGui, lần sau gửi lại
-    finally { dangGui = false; }
+    finally {
+      dangGui = false;
+      if (S && S.choGui && phien !== phienGui) { clearTimeout(henGui); henGui = setTimeout(guiNgay, 500); }
+    }
   }
   window.addEventListener('online', () => guiNgay());
   const gioGui = t => new Date(t).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
@@ -740,7 +756,7 @@
     const ma = taoMa();
     const m = datMan('ket-thuc', '<div class="ket-thuc"><div class="vuong-mien">👑</div><h2>Vương quốc Hữu Tỉ đã được giải cứu!</h2>' +
       CT.KET_THUC.map(x => '<p>' + H.text(x) + '</p>').join('') +
-      '<div class="bang-khen"><p class="eyebrow">Bằng khen</p><h3>Hiệp sĩ Toán học</h3><p class="bk-ten">' + esc(S.ten) + '</p><p>' + (S.lop ? 'Lớp ' + esc(S.lop) + ' · ' : '') + 'Cấp ' + cap(S.xp) + ' · ⭐ ' + tongSao() + '/90 · 🏅 ' + Object.keys(S.hh).length + ' huy hiệu</p></div>' +
+      '<div class="bang-khen"><p class="eyebrow">Bằng khen</p><h3>Hiệp sĩ Toán học</h3><p class="bk-ten">' + esc(S.ten) + '</p><p>' + (S.lop ? 'Lớp ' + esc(S.lop) + ' · ' : '') + 'Cấp ' + cap(S.xp) + ' · ⭐ ' + tongSao() + '/90 · 🏅 ' + Object.keys(S.hh).length + ' huy hiệu</p>' + theGV(true) + '</div>' +
       '<p>Gửi mã này cho thầy cô để lên bảng xếp hạng lớp:</p><div class="o-ma"><code id="ma">' + ma + '</code><button class="nut nut-chinh" id="chep">📋 Chép mã</button></div>' +
       '<p class="phu">Em có thể quay lại các vùng để săn đủ 90 sao, chơi mức Khó và giải hết Hang Ôn Tập!</p>' +
       '<button class="nut nut-chinh nut-to" id="ve">Về bản đồ ▶</button></div>', false);
@@ -759,7 +775,7 @@
   });
 
   window.TroChoi = { // dùng cho chạy thử tự động
-    get S() { return S; }, get B() { return B; }, manTheGioi: () => di(manTheGioi), manVung: v => di(() => manVung(v)), batDau, luu
+    get S() { return S; }, get B() { return B; }, manTheGioi: () => di(manTheGioi), manVung: v => di(() => manVung(v)), batDau, luu, guiKetQua
   };
   S = null; manMoDau();
 })();

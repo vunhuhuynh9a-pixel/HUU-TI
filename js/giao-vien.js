@@ -8,6 +8,10 @@
   let hs = [], sapXep = { cot: 'xp', giam: true };
 
   try { $('#o-ma').value = localStorage.getItem(KEY) || ''; } catch (e) {}
+  (function () { // tên giáo viên, trường từ du-lieu/cau-hinh.js
+    const c = window.CAU_HINH || {}, el = $('#thong-tin-gv');
+    if (el && (c.giaoVien || c.truong)) el.textContent = [c.giaoVien ? 'Giáo viên: ' + c.giaoVien : '', c.truong || ''].filter(Boolean).join(' · ');
+  })();
 
   const ngayDep = n => { n = String(n); return n.length === 8 ? n.slice(6) + '/' + n.slice(4, 6) + '/' + n.slice(0, 4) : n; };
   const tiLe = h => (h.dung + h.sai) ? h.dung / (h.dung + h.sai) : 0;

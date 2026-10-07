@@ -420,3 +420,5 @@ details ol { margin: 6px 0 0; padding-left: 22px; }
 .link-gv { align-self: center; font-size: .85rem; font-weight: 700; color: var(--mo); }
 .chu-bb { font-family: "Cambria Math", "Segoe UI Symbol", "STIX Two Math", "Noto Sans Math", "Times New Roman", serif; font-size: 1.12em; padding-inline: .15em; }
 .o-gui { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--vien); border-radius: 12px; padding: 10px 12px; } .o-gui p { flex: 1 1 180px; font-weight: 700; }
+.logo-gv { margin-top: 12px; display: inline-block; background: var(--giay); border: 2px solid var(--vien); border-radius: 12px; padding: 6px 14px; font-size: .9rem; line-height: 1.4; box-shadow: 0 3px 0 var(--vien); }
+.bk-gv { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--chinh-dam); font-size: .9rem; }
